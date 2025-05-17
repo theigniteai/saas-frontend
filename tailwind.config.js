@@ -1,1 +1,8 @@
-module.exports = { content: ["./index.html", "./src/**/*.{js,jsx}"], theme: { extend: {} }, plugins: [] }
+// AccentShift Frontend (tailwind.config.js)
+module.exports = {
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
