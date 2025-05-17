@@ -1,5 +1,4 @@
-// AccentShift Frontend (package.json)
-{
+
   "name": "accentshift-frontend",
   "version": "1.0.0",
   "scripts": {
