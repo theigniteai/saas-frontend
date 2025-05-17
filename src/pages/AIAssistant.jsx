@@ -1,4 +1,3 @@
-/* Real working AI Assistant form */
 // AccentShift Frontend (src/pages/AIAssistant.jsx)
 import { useState } from 'react';
 import axios from 'axios';
