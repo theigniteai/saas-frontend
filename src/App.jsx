@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import AIAssistant from './pages/AIAssistant';
+import AIAgent from './pages/AIAgent';
 import AccentChanger from './pages/AccentChanger';
 import VoiceClone from './pages/VoiceClone';
 import Twilio from './pages/Twilio';
