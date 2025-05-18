@@ -1,77 +1,85 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef } from "react";
 
 export default function AccentChanger() {
   const [selectedAccent, setSelectedAccent] = useState("en-US");
   const [recording, setRecording] = useState(false);
-  const ws = useRef(null);
-  const mediaRecorder = useRef(null);
-  const audioPlayer = useRef(null);
+  const audioRef = useRef(null);
+  const wsRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
 
-  const handleStart = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      ws.current = new WebSocket("wss://accentshift-relay.up.railway.app");
+  const startStreaming = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      ws.current.onopen = () => {
-        console.log("WebSocket connected");
-        mediaRecorder.current = new MediaRecorder(stream, {
-          mimeType: "audio/webm",
-        });
+    const ws = new WebSocket("wss://accentshift-relay.up.railway.app/");
+    wsRef.current = ws;
 
-        mediaRecorder.current.ondataavailable = (event) => {
-          if (event.data.size > 0 && ws.current.readyState === WebSocket.OPEN) {
-            ws.current.send(event.data);
-          }
-        };
+    ws.onopen = () => {
+      console.log("WebSocket connected");
 
-        mediaRecorder.current.start(500); // send chunks every 500ms
-        setRecording(true);
-      };
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
 
-      ws.current.onmessage = async (event) => {
-        const audioBlob = new Blob([event.data], { type: "audio/mpeg" });
+      mediaRecorderRef.current = mediaRecorder;
 
-        // Validate audio blob size before playing
-        if (audioBlob.size < 1000) {
-          console.warn("Received too small audio chunk, skipping...");
-          return;
-        }
-
-        const audioUrl = URL.createObjectURL(audioBlob);
-        if (audioPlayer.current) {
-          audioPlayer.current.pause();
-          audioPlayer.current.src = audioUrl;
-          audioPlayer.current.load();
-          audioPlayer.current.play().catch((e) =>
-            console.error("Playback failed:", e)
-          );
+      mediaRecorder.ondataavailable = (e) => {
+        if (ws.readyState === WebSocket.OPEN && e.data.size > 0) {
+          ws.send(e.data);
         }
       };
 
-      ws.current.onclose = () => {
-        console.log("WebSocket disconnected");
-      };
-    } catch (err) {
-      console.error("Mic error:", err.message);
-      alert("Microphone access is required to use Accent Changer.");
+      mediaRecorder.start(250);
+    };
+
+    ws.onmessage = async (event) => {
+      const audioBlob = new Blob([event.data], { type: "audio/mpeg" });
+
+      if (audioBlob.size < 1000) {
+        console.warn("Received too small audio chunk, skipping...");
+        return;
+      }
+
+      const url = URL.createObjectURL(audioBlob);
+      const audio = audioRef.current;
+
+      try {
+        audio.pause();
+        audio.src = url;
+        audio.load();
+        await audio.play();
+      } catch (err) {
+        console.error("Playback failed:", err);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+  };
+
+  const stopStreaming = () => {
+    setRecording(false);
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
     }
   };
 
-  const handleStop = () => {
-    setRecording(false);
-    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-      mediaRecorder.current.stop();
-    }
-    if (ws.current) {
-      ws.current.close();
-    }
+  const handleStart = () => {
+    setRecording(true);
+    startStreaming();
   };
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold mb-6">Accent Changer</h1>
-
-      <div className="bg-white p-6 rounded-lg shadow max-w-xl space-y-4">
+      <div className="bg-white p-6 rounded shadow max-w-xl space-y-4">
         <div>
           <label className="block mb-1 font-semibold">Select Accent</label>
           <select
@@ -85,7 +93,6 @@ export default function AccentChanger() {
             <option value="en-IN">🇮🇳 English (India)</option>
           </select>
         </div>
-
         <div className="flex gap-4">
           <button
             onClick={handleStart}
@@ -95,20 +102,14 @@ export default function AccentChanger() {
             Start Accent Live
           </button>
           <button
-            onClick={handleStop}
+            onClick={stopStreaming}
             disabled={!recording}
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
           >
             Stop
           </button>
         </div>
-
-        <audio ref={audioPlayer} controls className="w-full mt-4" />
-        {recording && (
-          <p className="text-sm text-gray-600">
-            🎙️ Live accent relay started...
-          </p>
-        )}
+        <audio ref={audioRef} controls className="w-full mt-4" />
       </div>
     </div>
   );
