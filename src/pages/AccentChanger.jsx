@@ -1,23 +1,64 @@
-/* Real dropdown and stream controls */
 // AccentShift Frontend (src/pages/AccentChanger.jsx)
-import { useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export default function AccentChanger() {
-  const [selectedAccent, setSelectedAccent] = useState('en-US');
+  const [selectedAccent, setSelectedAccent] = useState("en-US");
   const [recording, setRecording] = useState(false);
+  const audioRef = useRef(null);
+  const socketRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+
+  useEffect(() => {
+    if (!recording) return;
+
+    const startStream = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const socket = new WebSocket("wss://accentshift-relay.up.railway.app");
+
+      socketRef.current = socket;
+      mediaRecorderRef.current = mediaRecorder;
+
+      socket.onopen = () => {
+        console.log("🎤 WebSocket connected");
+      };
+
+      socket.onmessage = (event) => {
+        if (audioRef.current && event.data instanceof Blob) {
+          const audioBlob = new Blob([event.data], { type: "audio/mpeg" });
+          const audioURL = URL.createObjectURL(audioBlob);
+          audioRef.current.src = audioURL;
+          audioRef.current.play();
+        }
+      };
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+          socket.send(e.data);
+        }
+      };
+
+      mediaRecorder.start(300); // send audio chunks every 300ms
+    };
+
+    startStream();
+
+    return () => {
+      mediaRecorderRef.current?.stop();
+      socketRef.current?.close();
+    };
+  }, [recording]);
 
   const handleStart = () => {
     setRecording(true);
-    // TODO: integrate mic stream to backend relay
   };
 
   const handleStop = () => {
     setRecording(false);
-    // TODO: stop stream
   };
 
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Accent Changer</h1>
 
       <div className="bg-white p-6 rounded-lg shadow max-w-xl space-y-4">
@@ -52,8 +93,8 @@ export default function AccentChanger() {
           </button>
         </div>
 
-        {recording && <p className="text-sm text-gray-600">🎙️ Live accent relay started...</p>}
+        <audio ref={audioRef} controls className="w-full mt-4" />
       </div>
     </div>
   );
-} 
+}
