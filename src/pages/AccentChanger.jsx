@@ -1,75 +1,70 @@
-// src/pages/AccentChanger.jsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export default function AccentChanger() {
-  const [selectedAccent, setSelectedAccent] = useState('us');
+  const [selectedAccent, setSelectedAccent] = useState("en-US");
   const [recording, setRecording] = useState(false);
-  const socketRef = useRef(null);
-  const audioRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
+  const ws = useRef(null);
+  const mediaRecorder = useRef(null);
+  const audioPlayer = useRef(null);
 
-  const relayUrl = 'wss://accentshift-relay.up.railway.app'; // ✅ Your Railway WebSocket URL
-
-  const startRecording = async () => {
+  const handleStart = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
+      ws.current = new WebSocket("wss://accentshift-relay.up.railway.app");
 
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      ws.current.onopen = () => {
+        console.log("WebSocket connected");
+        mediaRecorder.current = new MediaRecorder(stream, {
+          mimeType: "audio/webm",
+        });
 
-      const socket = new WebSocket(relayUrl);
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        console.log('🔗 WebSocket connected');
-        mediaRecorder.start(300); // send audio in chunks every 300ms
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0 && socket.readyState === 1) {
-            socket.send(e.data);
+        mediaRecorder.current.ondataavailable = (event) => {
+          if (event.data.size > 0 && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(event.data);
           }
         };
+
+        mediaRecorder.current.start(500); // send chunks every 500ms
+        setRecording(true);
       };
 
-      socket.onmessage = (event) => {
-        const audioBlob = new Blob([event.data], { type: 'audio/mpeg' });
+      ws.current.onmessage = async (event) => {
+        const audioBlob = new Blob([event.data], { type: "audio/mpeg" });
+
+        // Validate audio blob size before playing
+        if (audioBlob.size < 1000) {
+          console.warn("Received too small audio chunk, skipping...");
+          return;
+        }
+
         const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
-        audio.play();
+        if (audioPlayer.current) {
+          audioPlayer.current.pause();
+          audioPlayer.current.src = audioUrl;
+          audioPlayer.current.load();
+          audioPlayer.current.play().catch((e) =>
+            console.error("Playback failed:", e)
+          );
+        }
       };
 
-      socket.onerror = (err) => {
-        console.error('WebSocket error:', err);
+      ws.current.onclose = () => {
+        console.log("WebSocket disconnected");
       };
-
-      socket.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
-      };
-
-      setRecording(true);
     } catch (err) {
-      console.error('❌ Microphone access denied or not found:', err);
-      alert('Microphone not found. Please connect a mic and allow access.');
+      console.error("Mic error:", err.message);
+      alert("Microphone access is required to use Accent Changer.");
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-    }
-
-    if (socketRef.current && socketRef.current.readyState === 1) {
-      socketRef.current.close();
-    }
-
+  const handleStop = () => {
     setRecording(false);
+    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
+      mediaRecorder.current.stop();
+    }
+    if (ws.current) {
+      ws.current.close();
+    }
   };
 
   return (
@@ -84,23 +79,23 @@ export default function AccentChanger() {
             value={selectedAccent}
             onChange={(e) => setSelectedAccent(e.target.value)}
           >
-            <option value="us">🇺🇸 English (US)</option>
-            <option value="gb">🇬🇧 English (UK)</option>
-            <option value="au">🇦🇺 English (AUS)</option>
-            <option value="in">🇮🇳 English (India)</option>
+            <option value="en-US">🇺🇸 English (US)</option>
+            <option value="en-GB">🇬🇧 English (UK)</option>
+            <option value="en-AU">🇦🇺 English (AUS)</option>
+            <option value="en-IN">🇮🇳 English (India)</option>
           </select>
         </div>
 
         <div className="flex gap-4">
           <button
-            onClick={startRecording}
+            onClick={handleStart}
             disabled={recording}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
           >
             Start Accent Live
           </button>
           <button
-            onClick={stopRecording}
+            onClick={handleStop}
             disabled={!recording}
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
           >
@@ -108,7 +103,12 @@ export default function AccentChanger() {
           </button>
         </div>
 
-        {recording && <p className="text-sm text-gray-600">🎙️ Streaming to AccentRelay...</p>}
+        <audio ref={audioPlayer} controls className="w-full mt-4" />
+        {recording && (
+          <p className="text-sm text-gray-600">
+            🎙️ Live accent relay started...
+          </p>
+        )}
       </div>
     </div>
   );
