@@ -8,19 +8,18 @@ const AIAgent = () => {
   const [enabled, setEnabled] = useState(false);
   const [callLogs, setCallLogs] = useState([]);
 
-  const backendUrl = "https://saas-backend-ffcf.onrender.com/"; // change this
+  const backendUrl = "https://your-backend-url.onrender.com"; // ← CHANGE THIS
 
   const fetchSettings = async () => {
     try {
       const res = await axios.get(`${backendUrl}/ai-agent/settings`);
-      if (res.data) {
-        setPrompt(res.data.prompt || "");
-        setVoice(res.data.voice || "");
-        setAssignedNumber(res.data.assignedNumber || "");
-        setEnabled(res.data.enabled || false);
-      }
-    } catch (err) {
-      console.error("Fetch settings error:", err.message);
+      const data = res.data;
+      setPrompt(data.prompt || "");
+      setVoice(data.voice || "");
+      setAssignedNumber(data.assignedNumber || "");
+      setEnabled(data.enabled || false);
+    } catch (error) {
+      console.error("Failed to fetch agent settings");
     }
   };
 
@@ -28,8 +27,8 @@ const AIAgent = () => {
     try {
       const res = await axios.get(`${backendUrl}/ai-agent/logs`);
       setCallLogs(res.data || []);
-    } catch (err) {
-      console.error("Fetch logs error:", err.message);
+    } catch (error) {
+      console.error("Failed to fetch call logs");
     }
   };
 
@@ -41,8 +40,8 @@ const AIAgent = () => {
         assignedNumber,
         enabled,
       });
-      alert("Agent settings saved!");
-    } catch (err) {
+      alert("Settings saved successfully!");
+    } catch (error) {
       alert("Failed to save settings.");
     }
   };
@@ -53,23 +52,23 @@ const AIAgent = () => {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">🤖 AI Calling Agent Settings</h2>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">🤖 AI Calling Agent</h2>
 
-      <div className="space-y-5 bg-white p-5 rounded-xl shadow-sm border">
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm border">
         <div>
-          <label className="block font-medium mb-1">Agent Prompt</label>
+          <label className="block font-semibold mb-1">Agent Prompt</label>
           <textarea
+            rows="4"
             className="w-full border rounded-md p-3"
-            rows={4}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="E.g., Greet the user and ask what service they’re looking for..."
+            placeholder="E.g., Greet the caller and ask what service they’re looking for."
           />
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Voice ID (ElevenLabs)</label>
+          <label className="block font-semibold mb-1">Voice ID (ElevenLabs)</label>
           <input
             type="text"
             className="w-full border rounded-md p-3"
@@ -80,13 +79,13 @@ const AIAgent = () => {
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Assigned Twilio Number</label>
+          <label className="block font-semibold mb-1">Assigned Twilio Number</label>
           <input
             type="text"
             className="w-full border rounded-md p-3"
             value={assignedNumber}
             onChange={(e) => setAssignedNumber(e.target.value)}
-            placeholder="+14151234567"
+            placeholder="+1415XXXXXXX"
           />
         </div>
 
@@ -96,32 +95,28 @@ const AIAgent = () => {
             checked={enabled}
             onChange={() => setEnabled(!enabled)}
           />
-          <label className="text-sm font-medium">Enable AI Agent</label>
+          <label className="font-medium">Enable AI Agent</label>
         </div>
 
         <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
           onClick={saveSettings}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md"
         >
           Save Agent Settings
         </button>
       </div>
 
       <div className="mt-10">
-        <h3 className="text-xl font-bold mb-4">📞 Call Logs</h3>
-
+        <h3 className="text-xl font-semibold mb-4">📞 Call Logs</h3>
         {callLogs.length === 0 ? (
-          <p className="text-gray-500">No call logs found yet.</p>
+          <p className="text-gray-500">No call logs found.</p>
         ) : (
-          <div className="space-y-4">
-            {callLogs.map((log, i) => (
-              <div
-                key={i}
-                className="border rounded-lg p-4 shadow-sm bg-white"
-              >
-                <p><strong>📱 From:</strong> {log.from}</p>
-                <p><strong>🗣️ Caller Said:</strong> {log.userSpeech}</p>
-                <p><strong>🤖 Agent Replied:</strong> {log.aiReply}</p>
+          <ul className="space-y-4">
+            {callLogs.map((log, index) => (
+              <li key={index} className="border p-4 rounded-md shadow-sm bg-white">
+                <p><strong>From:</strong> {log.from}</p>
+                <p><strong>User Said:</strong> {log.userSpeech}</p>
+                <p><strong>AI Replied:</strong> {log.aiReply}</p>
                 {log.recordingUrl && (
                   <audio
                     controls
@@ -132,9 +127,9 @@ const AIAgent = () => {
                 <p className="text-xs text-gray-400 mt-1">
                   {new Date(log.createdAt).toLocaleString()}
                 </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>
