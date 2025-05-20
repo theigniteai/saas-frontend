@@ -19,7 +19,7 @@ const AIAgent = () => {
       setAssignedNumber(data.assignedNumber || "");
       setEnabled(data.enabled || false);
     } catch (error) {
-      console.error("Failed to fetch agent settings");
+      console.error("Failed to fetch settings");
     }
   };
 
@@ -28,7 +28,7 @@ const AIAgent = () => {
       const res = await axios.get(`${backendUrl}/ai-agent/logs`);
       setCallLogs(res.data || []);
     } catch (error) {
-      console.error("Failed to fetch call logs");
+      console.error("Failed to fetch logs");
     }
   };
 
@@ -40,9 +40,9 @@ const AIAgent = () => {
         assignedNumber,
         enabled,
       });
-      alert("Settings saved successfully!");
+      alert("Agent settings saved successfully!");
     } catch (error) {
-      alert("Failed to save settings.");
+      alert("Failed to save agent settings.");
     }
   };
 
