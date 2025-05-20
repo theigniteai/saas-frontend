@@ -8,7 +8,7 @@ const AIAgent = () => {
   const [enabled, setEnabled] = useState(false);
   const [callLogs, setCallLogs] = useState([]);
 
-  const backendUrl = "https://saas-backend-ffcf.onrender.com/"; // ← CHANGE THIS
+  const backendUrl = "https://saas-backend-ffcf.onrender.com";
 
   const fetchSettings = async () => {
     try {
