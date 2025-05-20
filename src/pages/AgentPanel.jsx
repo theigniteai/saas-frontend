@@ -9,7 +9,7 @@ const AgentPanel = () => {
   const [callLogs, setCallLogs] = useState([]);
 
   const backendUrl = "https://saas-backend-ffcf.onrender.com";
-  const userId = "demo-user"; // ✅ Static test userId
+  const userId = "Muhammad Muzammil"; // ✅ Static test userId
 
   // ✅ Fetch AI agent settings
   const fetchSettings = async () => {
