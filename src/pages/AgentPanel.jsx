@@ -43,7 +43,7 @@ const AgentPanel = () => {
         voice,
         assignedNumber,
         enabled,
-        userId
+         userId: "demo-user" 
       });
       alert("Agent settings saved!");
     } catch (err) {
