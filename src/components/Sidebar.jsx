@@ -1,44 +1,39 @@
-import { NavLink } from 'react-router-dom';
-import {
-  FaTachometerAlt,
-  FaUserSecret,
-  FaMagic,
-  FaClone,
-  FaPhone,
-  FaCreditCard,
-  FaCog
-} from 'react-icons/fa';
+import { Routes, Route } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
+import AgentPanel from './pages/AgentPanel';
+import CallLogs from './pages/CallLogs';
+import Twilio from './pages/Twilio';
+import AccentChanger from './pages/AccentChanger';
+import VoiceClone from './pages/VoiceClone';
+import Billing from './pages/Billing';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
-  { path: '/agent-panel', label: 'Agent Panel', icon: <FaUserSecret /> },         // ✅ Merged AI module
-  { path: '/twilio', label: 'Twilio', icon: <FaPhone /> },
-  { path: '/accent-changer', label: 'Accent Changer', icon: <FaMagic /> },
-  { path: '/voice-clone', label: 'Voice Clone', icon: <FaClone /> },
-  { path: '/billing', label: 'Billing', icon: <FaCreditCard /> },
-  { path: '/settings', label: 'Settings', icon: <FaCog /> },
-];
-
-export default function Sidebar() {
+export default function App() {
   return (
-    <aside className="w-64 bg-white shadow-md h-screen p-4">
-      <h2 className="text-xl font-bold mb-6">AccentShift</h2>
-      <nav className="flex flex-col gap-3">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-100'
-              }`
-            }
-          >
-            {item.icon}
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+    <Routes>
+      <Route
+        path="/*"
+        element={
+          <div className="flex min-h-screen bg-gray-50">
+            <Sidebar />
+            <main className="flex-grow p-6">
+              <Routes>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="agent-panel" element={<AgentPanel />} />
+                <Route path="call-logs" element={<CallLogs />} />
+                <Route path="twilio" element={<Twilio />} />
+                <Route path="accent-changer" element={<AccentChanger />} />
+                <Route path="voice-clone" element={<VoiceClone />} />
+                <Route path="billing" element={<Billing />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
