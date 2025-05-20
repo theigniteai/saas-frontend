@@ -4,8 +4,7 @@ import { FaTachometerAlt, FaRobot, FaMagic, FaClone, FaPhone, FaCreditCard, FaCo
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
-  { path: '/ai-assistant', label: 'AI Assistant', icon: <FaRobot /> },
-  { path: '/ai-agent', label: 'AI Agent', icon: <FaUserSecret /> },
+ { path: '/agent-panel', label: 'Agent Panel', icon: <FaUserSecret /> },
   { path: '/accent-changer', label: 'Accent Changer', icon: <FaMagic /> },
   { path: '/voice-clone', label: 'Voice Clone', icon: <FaClone /> },
   { path: '/twilio', label: 'Twilio', icon: <FaPhone /> },
