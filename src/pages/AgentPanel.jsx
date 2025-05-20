@@ -32,20 +32,22 @@ const AgentPanel = () => {
     }
   };
 
-  const saveSettings = async () => {
-    try {
-      await axios.post(`${backendUrl}/ai-agent/settings`, {
-        prompt,
-        voice,
-        assignedNumber,
-        enabled,
-         userId: "demo-user",
-      });
-      alert("Agent settings saved!");
-    } catch (err) {
-      alert("Failed to save settings.");
-    }
-  };
+ const saveSettings = async () => {
+  try {
+    await axios.post(`${backendUrl}/ai-agent/settings`, {
+      prompt,
+      voice,
+      assignedNumber,
+      enabled,
+      userId: "demo-user" 
+    });
+    alert("Agent settings saved!");
+  } catch (err) {
+    console.error("Save failed:", err.response?.data || err.message);
+    alert("Failed to save settings.");
+  }
+};
+
 
   useEffect(() => {
     fetchSettings();
