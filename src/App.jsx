@@ -24,8 +24,7 @@ export default function App() {
             <main className="flex-grow p-6">
               <Routes>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="ai-assistant" element={<AIAssistant />} />
-            <Route path="ai-agent" element={<AIAgent />} />   
+               <Route path="agent-panel" element={<AgentPanel />} />
                 <Route path="accent-changer" element={<AccentChanger />} />
                 <Route path="voice-clone" element={<VoiceClone />} />
                 <Route path="twilio" element={<Twilio />} />
