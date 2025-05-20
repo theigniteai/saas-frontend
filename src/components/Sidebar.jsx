@@ -1,13 +1,10 @@
 // AccentShift Frontend (src/components/Sidebar.jsx)
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaRobot, FaMagic, FaClone, FaPhone, FaCreditCard, FaCog,FaRobot, FaUserSecret  } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserSecret, FaCreditCard, FaCog } from 'react-icons/fa';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
- { path: '/agent-panel', label: 'Agent Panel', icon: <FaUserSecret /> },
-  { path: '/accent-changer', label: 'Accent Changer', icon: <FaMagic /> },
-  { path: '/voice-clone', label: 'Voice Clone', icon: <FaClone /> },
-  { path: '/twilio', label: 'Twilio', icon: <FaPhone /> },
+  { path: '/agent-panel', label: 'Agent Panel', icon: <FaUserSecret /> },
   { path: '/billing', label: 'Billing', icon: <FaCreditCard /> },
   { path: '/settings', label: 'Settings', icon: <FaCog /> },
 ];
