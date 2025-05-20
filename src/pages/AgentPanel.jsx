@@ -9,10 +9,12 @@ const AgentPanel = () => {
   const [callLogs, setCallLogs] = useState([]);
 
   const backendUrl = "https://saas-backend-ffcf.onrender.com";
+  const userId = "demo-user"; // ✅ Static test userId
 
+  // ✅ Fetch AI agent settings
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(`${backendUrl}/ai-agent/settings`);
+      const res = await axios.get(`${backendUrl}/ai-agent/settings?userId=${userId}`);
       const data = res.data;
       setPrompt(data.prompt || "");
       setVoice(data.voice || "");
@@ -23,31 +25,32 @@ const AgentPanel = () => {
     }
   };
 
+  // ✅ Fetch call logs
   const fetchLogs = async () => {
     try {
-      const res = await axios.get(`${backendUrl}/ai-agent/logs`);
+      const res = await axios.get(`${backendUrl}/ai-agent/logs?userId=${userId}`);
       setCallLogs(res.data || []);
     } catch (error) {
       console.error("Failed to fetch logs");
     }
   };
 
- const saveSettings = async () => {
-  try {
-    await axios.post(`${backendUrl}/ai-agent/settings`, {
-      prompt,
-      voice,
-      assignedNumber,
-      enabled,
-      userId: "demo-user" 
-    });
-    alert("Agent settings saved!");
-  } catch (err) {
-    console.error("Save failed:", err.response?.data || err.message);
-    alert("Failed to save settings.");
-  }
-};
-
+  // ✅ Save AI agent settings
+  const saveSettings = async () => {
+    try {
+      await axios.post(`${backendUrl}/ai-agent/settings`, {
+        prompt,
+        voice,
+        assignedNumber,
+        enabled,
+        userId
+      });
+      alert("Agent settings saved!");
+    } catch (err) {
+      console.error("Save failed:", err.response?.data || err.message);
+      alert("Failed to save settings.");
+    }
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -66,7 +69,7 @@ const AgentPanel = () => {
             rows={4}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g., Greet the caller and ask how you can help..."
+            placeholder="e.g., Greet the caller and offer assistance..."
           />
         </div>
 
@@ -88,7 +91,7 @@ const AgentPanel = () => {
             className="w-full border rounded-md p-3"
             value={assignedNumber}
             onChange={(e) => setAssignedNumber(e.target.value)}
-            placeholder="+1415XXXXXXX"
+            placeholder="+1xxxxxxxxxx"
           />
         </div>
 
@@ -117,10 +120,7 @@ const AgentPanel = () => {
         ) : (
           <div className="space-y-4">
             {callLogs.map((log, i) => (
-              <div
-                key={i}
-                className="border rounded-lg p-4 shadow-sm bg-white"
-              >
+              <div key={i} className="border rounded-lg p-4 shadow-sm bg-white">
                 <p><strong>📱 From:</strong> {log.from}</p>
                 <p><strong>🗣️ Caller Said:</strong> {log.userSpeech}</p>
                 <p><strong>🤖 Agent Replied:</strong> {log.aiReply}</p>
