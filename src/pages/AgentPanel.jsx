@@ -46,6 +46,18 @@ const AgentPanel = () => {
     }
   };
 
+  const handleStartCall = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/ai-agent/start-call`, {
+        to: twilioNumber,
+      });
+      alert("📞 Call initiated successfully!");
+    } catch (err) {
+      console.error("Call error:", err.message);
+      alert("❌ Failed to start call");
+    }
+  };
+
   return (
     <div className="max-w-xl mx-auto p-6 mt-10 bg-white shadow-md rounded-lg space-y-4">
       <h2 className="text-xl font-bold">🎛 AI Agent Settings</h2>
@@ -90,13 +102,22 @@ const AgentPanel = () => {
         <label>Enable AI Agent</label>
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-      >
-        {loading ? "Saving..." : "Save Settings"}
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          {loading ? "Saving..." : "Save Settings"}
+        </button>
+
+        <button
+          onClick={handleStartCall}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+        >
+          📞 Call Now
+        </button>
+      </div>
     </div>
   );
 };
