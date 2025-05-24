@@ -1,4 +1,3 @@
-// AgentPanel.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -32,7 +31,7 @@ const AgentPanel = () => {
       const payload = {
         userId: "test_user_123",
         prompt,
-        assignedNumber: twilioNumber,
+        assignedNumber: twilioNumber, // ✅ Corrected key
         voiceId,
         isEnabled,
       };
@@ -108,7 +107,7 @@ const AgentPanel = () => {
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
         >
-          {loading ? "Saving..." : "Save Settings"}
+          {loading ? "Saving..." : "Save Agent Settings"}
         </button>
 
         <button
