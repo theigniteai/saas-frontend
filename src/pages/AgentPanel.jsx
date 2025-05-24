@@ -1,4 +1,3 @@
-// src/pages/AgentPanel.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -10,7 +9,7 @@ const AgentPanel = () => {
   const [callLogs, setCallLogs] = useState([]);
 
   const backendUrl = "https://saas-backend-ffcf.onrender.com";
-  const userId = "681e3a18f70ab9693a7cd5fd"; // ✅ Real MongoDB User ID
+  const userId = "681e3a18f70ab9693a7cd5fd"; // ✅ Replace if you use another user later
 
   const fetchSettings = async () => {
     try {
@@ -93,7 +92,7 @@ const AgentPanel = () => {
             className="w-full border rounded-md p-3"
             value={assignedNumber}
             onChange={(e) => setAssignedNumber(e.target.value)}
-            placeholder="+1415XXXXXXX"
+            placeholder="+1XXXXXXXXXX"
           />
         </div>
 
