@@ -1,143 +1,104 @@
-// src/pages/AgentPanel.jsx
-import React, { useEffect, useState } from "react";
+// AgentPanel.jsx
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const AgentPanel = () => {
   const [prompt, setPrompt] = useState("");
-  const [voice, setVoice] = useState("eleven_en_us_male");
-  const [assignedNumber, setAssignedNumber] = useState("");
-  const [enabled, setEnabled] = useState(false);
-  const [callLogs, setCallLogs] = useState([]);
-
-  const backendUrl = "https://saas-backend-ffcf.onrender.com";
-  const userId = "681e3a18f70ab9693a7cd5fd"; // ✅ Use correct MongoDB ObjectId here
-
-  const fetchSettings = async () => {
-    try {
-      const res = await axios.get(`${backendUrl}/ai-agent/settings`, {
-        params: { userId },
-      });
-      const data = res.data;
-      setPrompt(data.prompt || "");
-      setVoice(data.voice || "eleven_en_us_male");
-      setAssignedNumber(data.assignedNumber || "");
-      setEnabled(data.enabled || false);
-    } catch (error) {
-      console.error("Failed to fetch settings", error);
-    }
-  };
-
-  const fetchLogs = async () => {
-    try {
-      const res = await axios.get(`${backendUrl}/ai-agent/logs`, {
-        params: { userId },
-      });
-      setCallLogs(res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch logs", error);
-    }
-  };
-
-  const saveSettings = async () => {
-    try {
-      console.log("Saving with userId:", userId);
-      await axios.post(`${backendUrl}/ai-agent/settings`, {
-        prompt,
-        voice,
-        assignedNumber,
-        enabled,
-        userId
-      });
-      alert("Agent settings saved!");
-    } catch (err) {
-      console.error("Save failed:", err.response?.data || err.message);
-      alert("Failed to save settings.");
-    }
-  };
+  const [voiceId, setVoiceId] = useState("eleven_en_us_male");
+  const [twilioNumber, setTwilioNumber] = useState("");
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Load existing agent settings on mount
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/ai-agent/settings`);
+        setPrompt(res.data.prompt || "");
+        setVoiceId(res.data.voiceId || "eleven_en_us_male");
+        setTwilioNumber(res.data.assignedNumber || "");
+        setIsEnabled(res.data.isEnabled || false);
+      } catch (err) {
+        console.error("Failed to fetch settings", err.message);
+      }
+    };
     fetchSettings();
-    fetchLogs();
   }, []);
 
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        userId: "test_user_123", // hardcoded
+        prompt,
+        assignedNumber: twilioNumber,
+        voiceId,
+        isEnabled,
+      };
+
+      await axios.post(`${API_URL}/ai-agent/settings`, payload);
+      alert("✅ Settings saved successfully");
+    } catch (err) {
+      console.error("Save error:", err.message);
+      alert("❌ Failed to save settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">🤖 AI Calling Agent Panel</h2>
+    <div className="p-6 max-w-xl mx-auto bg-white shadow rounded-lg mt-10 space-y-4">
+      <h2 className="text-xl font-semibold">🤖 AI Agent Settings</h2>
 
-      <div className="space-y-5 bg-white p-5 rounded-xl shadow-sm border">
-        <div>
-          <label className="block font-medium mb-1">Agent Prompt</label>
-          <textarea
-            className="w-full border rounded-md p-3"
-            rows={4}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g., Greet the caller and ask how you can help..."
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-1">Voice ID</label>
-          <input
-            type="text"
-            className="w-full border rounded-md p-3"
-            value={voice}
-            onChange={(e) => setVoice(e.target.value)}
-            placeholder="e.g., eleven_en_us_male"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-1">Twilio Number</label>
-          <input
-            type="text"
-            className="w-full border rounded-md p-3"
-            value={assignedNumber}
-            onChange={(e) => setAssignedNumber(e.target.value)}
-            placeholder="+1XXXXXXXXXX"
-          />
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={() => setEnabled(!enabled)}
-          />
-          <label className="text-sm font-medium">Enable Agent</label>
-        </div>
-
-        <button
-          onClick={saveSettings}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md"
-        >
-          Save Agent Settings
-        </button>
+      <div>
+        <label className="block font-medium mb-1">Prompt</label>
+        <textarea
+          className="w-full border p-2 rounded"
+          rows={4}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
       </div>
 
-      <div className="mt-10">
-        <h3 className="text-xl font-bold mb-4">📞 Call Logs</h3>
-
-        {callLogs.length === 0 ? (
-          <p className="text-gray-500">No call logs yet.</p>
-        ) : (
-          <div className="space-y-4">
-            {callLogs.map((log, i) => (
-              <div key={i} className="border rounded-lg p-4 shadow-sm bg-white">
-                <p><strong>📱 From:</strong> {log.from}</p>
-                <p><strong>🗣️ Caller Said:</strong> {log.userSpeech}</p>
-                <p><strong>🤖 Agent Replied:</strong> {log.aiReply}</p>
-                {log.recordingUrl && (
-                  <audio controls src={`${log.recordingUrl}.mp3`} className="mt-2" />
-                )}
-                <p className="text-xs text-gray-400 mt-1">
-                  {new Date(log.createdAt).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+      <div>
+        <label className="block font-medium mb-1">Twilio Number</label>
+        <input
+          type="text"
+          className="w-full border p-2 rounded"
+          value={twilioNumber}
+          onChange={(e) => setTwilioNumber(e.target.value)}
+          placeholder="+1..."
+        />
       </div>
+
+      <div>
+        <label className="block font-medium mb-1">Voice ID (ElevenLabs)</label>
+        <input
+          type="text"
+          className="w-full border p-2 rounded"
+          value={voiceId}
+          onChange={(e) => setVoiceId(e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={isEnabled}
+          onChange={(e) => setIsEnabled(e.target.checked)}
+        />
+        <label>Enable AI Agent</label>
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        {loading ? "Saving..." : "Save Settings"}
+      </button>
     </div>
   );
 };
