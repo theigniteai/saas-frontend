@@ -1,3 +1,4 @@
+// src/pages/AgentPanel.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -9,7 +10,7 @@ const AgentPanel = () => {
   const [callLogs, setCallLogs] = useState([]);
 
   const backendUrl = "https://saas-backend-ffcf.onrender.com";
-  const userId = "681e3a18f70ab9693a7cd5fd"; // ✅ Replace if you use another user later
+  const userId = "681e3a18f70ab9693a7cd5fd"; // ✅ Use correct MongoDB ObjectId here
 
   const fetchSettings = async () => {
     try {
@@ -18,7 +19,7 @@ const AgentPanel = () => {
       });
       const data = res.data;
       setPrompt(data.prompt || "");
-      setVoice(data.voice || "");
+      setVoice(data.voice || "eleven_en_us_male");
       setAssignedNumber(data.assignedNumber || "");
       setEnabled(data.enabled || false);
     } catch (error) {
@@ -39,6 +40,7 @@ const AgentPanel = () => {
 
   const saveSettings = async () => {
     try {
+      console.log("Saving with userId:", userId);
       await axios.post(`${backendUrl}/ai-agent/settings`, {
         prompt,
         voice,
