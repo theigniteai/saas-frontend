@@ -16,8 +16,38 @@ export default function AccentChanger() {
     socketRef.current = new WebSocket(WS_URL);
 
     socketRef.current.onopen = () => {
+      console.log("✅ WebSocket connected");
       socketRef.current.send(JSON.stringify({ type: "start", accent }));
-      console.log("WebSocket connected and accent sent:", accent);
+
+      setTimeout(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = stream;
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = audioContext;
+
+        const source = audioContext.createMediaStreamSource(stream);
+        sourceRef.current = source;
+
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
+
+        processor.onaudioprocess = (e) => {
+          const input = e.inputBuffer.getChannelData(0);
+          if (!input.some((val) => val !== 0)) return; // skip silent chunks
+          const int16 = new Int16Array(input.length);
+          for (let i = 0; i < input.length; i++) {
+            int16[i] = input[i] * 32767;
+          }
+          if (socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(int16);
+          } else {
+            console.warn("⚠️ Tried to send while socket not open");
+          }
+        };
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+      }, 500); // small delay after socket opens
     };
 
     socketRef.current.onmessage = (event) => {
@@ -26,31 +56,6 @@ export default function AccentChanger() {
       const audio = new Audio(url);
       audio.play();
     };
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    streamRef.current = stream;
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioContextRef.current = audioContext;
-
-    const source = audioContext.createMediaStreamSource(stream);
-    sourceRef.current = source;
-
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
-    processorRef.current = processor;
-
-    processor.onaudioprocess = (e) => {
-      const input = e.inputBuffer.getChannelData(0);
-      const int16 = new Int16Array(input.length);
-      for (let i = 0; i < input.length; i++) {
-        int16[i] = input[i] * 32767;
-      }
-      if (socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(int16);
-      }
-    };
-
-    source.connect(processor);
-    processor.connect(audioContext.destination);
   };
 
   const stopStream = () => {
@@ -61,7 +66,9 @@ export default function AccentChanger() {
     if (audioContextRef.current) audioContextRef.current.close();
     if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
     if (socketRef.current) {
-      socketRef.current.send(JSON.stringify({ type: "stop" }));
+      if (socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: "stop" }));
+      }
       socketRef.current.close();
     }
   };
